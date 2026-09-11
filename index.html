@@ -50,42 +50,8 @@
             font-size: 15px;
         }
 
-        .toolbar {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            align-items: center;
-            margin-bottom: 16px;
-        }
-
-        .upload {
-            position: relative;
-            overflow: hidden;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 44px;
-            padding: 0 18px;
-            border: 1px solid #30343c;
-            border-radius: 8px;
-            background: #191b20;
-            color: #ffffff;
-            cursor: pointer;
-            font-size: 14px;
-        }
-
-        .upload:hover {
-            background: #20232a;
-        }
-
-        .upload input {
-            position: absolute;
-            inset: 0;
-            opacity: 0;
-            cursor: pointer;
-        }
-
         .status {
+            margin-bottom: 16px;
             color: #9da1aa;
             font-size: 14px;
         }
@@ -221,6 +187,7 @@
         }
 
         @media (max-width: 700px) {
+
             body {
                 padding: 10px;
             }
@@ -245,6 +212,7 @@
             .bottom-info {
                 font-size: 11px;
             }
+
         }
     </style>
 </head>
@@ -254,30 +222,22 @@
 <div class="page">
 
     <header>
-        <h1>Weather History</h1>
+
+        <h1>
+            Weather History
+        </h1>
+
         <p class="subtitle">
             Yearly temperature history
         </p>
+
     </header>
 
-    <div class="toolbar">
-
-        <label class="upload">
-            Load CSV
-            <input
-                id="fileInput"
-                type="file"
-                accept=".csv,text/csv"
-            >
-        </label>
-
-        <span
-            id="status"
-            class="status"
-        >
-            Load your WeatherData.csv file
-        </span>
-
+    <div
+        id="status"
+        class="status"
+    >
+        Loading WeatherData.csv...
     </div>
 
     <div class="chart-card">
@@ -285,6 +245,7 @@
         <div class="chart-header">
 
             <div>
+
                 <div class="chart-title">
                     Average Temperature by Year
                 </div>
@@ -293,25 +254,47 @@
                     id="chartInfo"
                     class="chart-info"
                 >
-                    No data loaded
+                    Loading data...
                 </div>
+
             </div>
 
             <div class="legend">
 
                 <div class="legend-item">
-                    <span class="legend-line legend-high"></span>
-                    <span>Average High</span>
+
+                    <span
+                        class="legend-line legend-high"
+                    ></span>
+
+                    <span>
+                        Average High
+                    </span>
+
                 </div>
 
                 <div class="legend-item">
-                    <span class="legend-line legend-average"></span>
-                    <span>Average Temperature</span>
+
+                    <span
+                        class="legend-line legend-average"
+                    ></span>
+
+                    <span>
+                        Average Temperature
+                    </span>
+
                 </div>
 
                 <div class="legend-item">
-                    <span class="legend-line legend-low"></span>
-                    <span>Average Low</span>
+
+                    <span
+                        class="legend-line legend-low"
+                    ></span>
+
+                    <span>
+                        Average Low
+                    </span>
+
                 </div>
 
             </div>
@@ -334,7 +317,7 @@
                 id="empty"
                 class="empty"
             >
-                Load a yearly weather CSV to display the chart.
+                Loading weather data...
             </div>
 
         </div>
@@ -356,9 +339,6 @@
 </div>
 
 <script>
-
-const fileInput =
-    document.getElementById("fileInput");
 
 const status =
     document.getElementById("status");
@@ -410,14 +390,18 @@ function parseCSV(text) {
 
         if (character === '"') {
 
-            if (insideQuotes && next === '"') {
+            if (
+                insideQuotes &&
+                next === '"'
+            ) {
 
                 cell += '"';
                 i++;
 
             } else {
 
-                insideQuotes = !insideQuotes;
+                insideQuotes =
+                    !insideQuotes;
 
             }
 
@@ -430,8 +414,10 @@ function parseCSV(text) {
             cell = "";
 
         } else if (
-            (character === "\n" ||
-             character === "\r") &&
+            (
+                character === "\n" ||
+                character === "\r"
+            ) &&
             !insideQuotes
         ) {
 
@@ -439,7 +425,9 @@ function parseCSV(text) {
                 character === "\r" &&
                 next === "\n"
             ) {
+
                 i++;
+
             }
 
             row.push(cell);
@@ -447,10 +435,13 @@ function parseCSV(text) {
 
             if (
                 row.some(
-                    value => value.trim() !== ""
+                    value =>
+                        value.trim() !== ""
                 )
             ) {
+
                 rows.push(row);
+
             }
 
             row = [];
@@ -463,16 +454,22 @@ function parseCSV(text) {
 
     }
 
-    if (cell !== "" || row.length > 0) {
+    if (
+        cell !== "" ||
+        row.length > 0
+    ) {
 
         row.push(cell);
 
         if (
             row.some(
-                value => value.trim() !== ""
+                value =>
+                    value.trim() !== ""
             )
         ) {
+
             rows.push(row);
+
         }
 
     }
@@ -487,7 +484,10 @@ function parseCSV(text) {
                 header
                     .trim()
                     .toLowerCase()
-                    .replace(/[\s-]+/g, "_")
+                    .replace(
+                        /[\s-]+/g,
+                        "_"
+                    )
         );
 
     return rows
@@ -500,7 +500,10 @@ function parseCSV(text) {
                 (header, index) => {
 
                     object[header] =
-                        (row[index] || "").trim();
+                        (
+                            row[index] ||
+                            ""
+                        ).trim();
 
                 }
             );
@@ -523,7 +526,10 @@ function number(value) {
     const result =
         Number(
             String(value)
-                .replace(/[^\d.+-]/g, "")
+                .replace(
+                    /[^\d.+-]/g,
+                    ""
+                )
         );
 
     return Number.isFinite(result)
@@ -539,7 +545,10 @@ function number(value) {
     --------------------------------------------------
 */
 
-function findColumn(object, names) {
+function findColumn(
+    object,
+    names
+) {
 
     const keys =
         Object.keys(object);
@@ -573,9 +582,11 @@ function findColumn(object, names) {
 function prepareData(rows) {
 
     if (!rows.length) {
+
         throw new Error(
             "The CSV does not contain any data."
         );
+
     }
 
     const sample =
@@ -651,26 +662,27 @@ function prepareData(rows) {
                         row[yearColumn] || ""
                     ).trim();
 
-                /*
-                    If the column contains a full
-                    date instead of just a year,
-                    extract the first four digits.
-                */
-
                 const yearMatch =
                     year.match(/\d{4}/);
 
                 if (yearMatch) {
-                    year = yearMatch[0];
+
+                    year =
+                        yearMatch[0];
+
                 }
 
                 const yearNumber =
                     Number(year);
 
                 if (
-                    !Number.isFinite(yearNumber)
+                    !Number.isFinite(
+                        yearNumber
+                    )
                 ) {
+
                     return null;
+
                 }
 
                 return {
@@ -808,10 +820,6 @@ function drawChart() {
         padding.bottom;
 
 
-    /*
-        Find all available temperature values.
-    */
-
     const values = [];
 
     data.forEach(item => {
@@ -843,34 +851,33 @@ function drawChart() {
         Math.max(...values);
 
 
-    /*
-        Give the chart some breathing room.
-    */
-
     const range =
         maximum - minimum || 10;
 
-    minimum -= range * 0.08;
-    maximum += range * 0.08;
+    minimum -=
+        range * 0.08;
 
+    maximum +=
+        range * 0.08;
 
-    /*
-        Round the bounds to sensible
-        Fahrenheit values.
-    */
 
     minimum =
-        Math.floor(minimum / 5) * 5;
+        Math.floor(
+            minimum / 5
+        ) * 5;
 
     maximum =
-        Math.ceil(maximum / 5) * 5;
+        Math.ceil(
+            maximum / 5
+        ) * 5;
 
 
     /*
-        Background.
+        Background
     */
 
-    ctx.fillStyle = "#111317";
+    ctx.fillStyle =
+        "#111317";
 
     ctx.fillRect(
         0,
@@ -881,14 +888,19 @@ function drawChart() {
 
 
     /*
-        Horizontal grid lines.
+        Horizontal grid lines
     */
 
     const gridStep = 5;
 
-    ctx.font = "12px Arial";
-    ctx.textAlign = "right";
-    ctx.textBaseline = "middle";
+    ctx.font =
+        "12px Arial";
+
+    ctx.textAlign =
+        "right";
+
+    ctx.textBaseline =
+        "middle";
 
     for (
         let temperature = minimum;
@@ -900,8 +912,14 @@ function drawChart() {
             padding.top +
             chartHeight -
             (
-                (temperature - minimum) /
-                (maximum - minimum)
+                (
+                    temperature -
+                    minimum
+                ) /
+                (
+                    maximum -
+                    minimum
+                )
             ) *
             chartHeight;
 
@@ -918,7 +936,8 @@ function drawChart() {
         );
 
         ctx.lineTo(
-            width - padding.right,
+            width -
+            padding.right,
             y
         );
 
@@ -938,7 +957,7 @@ function drawChart() {
 
 
     /*
-        Vertical year positions.
+        X positions
     */
 
     const count =
@@ -947,10 +966,12 @@ function drawChart() {
     function getX(index) {
 
         if (count === 1) {
+
             return (
                 padding.left +
                 chartWidth / 2
             );
+
         }
 
         return (
@@ -965,14 +986,24 @@ function drawChart() {
     }
 
 
+    /*
+        Y positions
+    */
+
     function getY(value) {
 
         return (
             padding.top +
             chartHeight -
             (
-                (value - minimum) /
-                (maximum - minimum)
+                (
+                    value -
+                    minimum
+                ) /
+                (
+                    maximum -
+                    minimum
+                )
             ) *
             chartHeight
         );
@@ -981,24 +1012,32 @@ function drawChart() {
 
 
     /*
-        Bottom year labels.
+        Bottom year labels
     */
 
-    ctx.textAlign = "center";
-    ctx.textBaseline = "top";
-    ctx.font = "12px Arial";
+    ctx.textAlign =
+        "center";
+
+    ctx.textBaseline =
+        "top";
+
+    ctx.font =
+        "12px Arial";
 
     const maxLabels =
         Math.max(
             2,
-            Math.floor(width / 75)
+            Math.floor(
+                width / 75
+            )
         );
 
     const labelEvery =
         Math.max(
             1,
             Math.ceil(
-                count / maxLabels
+                count /
+                maxLabels
             )
         );
 
@@ -1007,10 +1046,13 @@ function drawChart() {
         (item, index) => {
 
             if (
-                index % labelEvery !== 0 &&
+                index %
+                labelEvery !== 0 &&
                 index !== count - 1
             ) {
+
                 return;
+
             }
 
             const x =
@@ -1022,7 +1064,9 @@ function drawChart() {
             ctx.fillText(
                 item.year,
                 x,
-                height - padding.bottom + 18
+                height -
+                padding.bottom +
+                18
             );
 
         }
@@ -1030,7 +1074,7 @@ function drawChart() {
 
 
     /*
-        Store positions for hover.
+        Hover points
     */
 
     data.forEach(
@@ -1038,13 +1082,20 @@ function drawChart() {
 
             chartPoints.push({
 
-                x: getX(index),
+                x:
+                    getX(index),
 
-                year: item.year,
+                year:
+                    item.year,
 
-                high: item.high,
-                average: item.average,
-                low: item.low
+                high:
+                    item.high,
+
+                average:
+                    item.average,
+
+                low:
+                    item.low
 
             });
 
@@ -1053,7 +1104,7 @@ function drawChart() {
 
 
     /*
-        Draw each temperature line.
+        Lines
     */
 
     drawLine(
@@ -1079,23 +1130,28 @@ function drawChart() {
 
 
     /*
-        Draw hover indicator.
+        Hover indicator
     */
 
     if (
         hoveredIndex >= 0 &&
-        hoveredIndex < chartPoints.length
+        hoveredIndex <
+        chartPoints.length
     ) {
 
         const point =
-            chartPoints[hoveredIndex];
+            chartPoints[
+                hoveredIndex
+            ];
 
         ctx.strokeStyle =
             "#555a64";
 
         ctx.lineWidth = 1;
 
-        ctx.setLineDash([4, 4]);
+        ctx.setLineDash(
+            [4, 4]
+        );
 
         ctx.beginPath();
 
@@ -1106,7 +1162,8 @@ function drawChart() {
 
         ctx.lineTo(
             point.x,
-            height - padding.bottom
+            height -
+            padding.bottom
         );
 
         ctx.stroke();
@@ -1206,8 +1263,11 @@ function drawLine(
 
     ctx.lineWidth = 2;
 
-    ctx.lineJoin = "round";
-    ctx.lineCap = "round";
+    ctx.lineJoin =
+        "round";
+
+    ctx.lineCap =
+        "round";
 
     ctx.stroke();
 
@@ -1231,7 +1291,9 @@ function drawHoverPoint(
         value === null ||
         !Number.isFinite(value)
     ) {
+
         return;
+
     }
 
     const y =
@@ -1276,25 +1338,31 @@ function drawHoverPoint(
     --------------------------------------------------
 */
 
-function findClosestPoint(mouseX) {
+function findClosestPoint(
+    mouseX
+) {
 
     if (!chartPoints.length) {
         return -1;
     }
 
     let closest = -1;
-    let distance = Infinity;
+
+    let distance =
+        Infinity;
 
     chartPoints.forEach(
         (point, index) => {
 
             const currentDistance =
                 Math.abs(
-                    point.x - mouseX
+                    point.x -
+                    mouseX
                 );
 
             if (
-                currentDistance < distance
+                currentDistance <
+                distance
             ) {
 
                 distance =
@@ -1335,6 +1403,7 @@ function showTooltip(
         </div>
 
         <div class="tooltip-row">
+
             <span class="tooltip-label">
                 Average High
             </span>
@@ -1342,9 +1411,11 @@ function showTooltip(
             <span class="tooltip-value">
                 ${formatValue(point.high)}
             </span>
+
         </div>
 
         <div class="tooltip-row">
+
             <span class="tooltip-label">
                 Average Temperature
             </span>
@@ -1352,9 +1423,11 @@ function showTooltip(
             <span class="tooltip-value">
                 ${formatValue(point.average)}
             </span>
+
         </div>
 
         <div class="tooltip-row">
+
             <span class="tooltip-label">
                 Average Low
             </span>
@@ -1362,14 +1435,11 @@ function showTooltip(
             <span class="tooltip-value">
                 ${formatValue(point.low)}
             </span>
+
         </div>
 
     `;
 
-
-    /*
-        Keep tooltip inside the chart.
-    */
 
     const tooltipWidth =
         tooltip.offsetWidth;
@@ -1437,13 +1507,18 @@ function formatValue(value) {
         value === null ||
         !Number.isFinite(value)
     ) {
+
         return "—";
+
     }
 
     return (
         Number(value)
             .toFixed(2)
-            .replace(/\.00$/, "")
+            .replace(
+                /\.00$/,
+                ""
+            )
     ) + "°F";
 
 }
@@ -1475,7 +1550,9 @@ chartWrap.addEventListener(
             rect.top;
 
         const index =
-            findClosestPoint(mouseX);
+            findClosestPoint(
+                mouseX
+            );
 
         if (index === -1) {
             return;
@@ -1529,7 +1606,9 @@ chartWrap.addEventListener(
             rect.top;
 
         const index =
-            findClosestPoint(mouseX);
+            findClosestPoint(
+                mouseX
+            );
 
         if (index === -1) {
             return;
@@ -1601,79 +1680,78 @@ chartWrap.addEventListener(
 
 /*
     --------------------------------------------------
-    LOAD FILE
+    LOAD WEATHERDATA.CSV
     --------------------------------------------------
 */
 
-fileInput.addEventListener(
-    "change",
-    async event => {
+async function loadWeatherData() {
 
-        const file =
-            event.target.files[0];
+    try {
 
-        if (!file) {
-            return;
+        const response =
+            await fetch(
+                "WeatherData.csv"
+            );
+
+        if (!response.ok) {
+
+            throw new Error(
+                "WeatherData.csv could not be loaded."
+            );
+
         }
+
+        const text =
+            await response.text();
+
+        const rows =
+            parseCSV(text);
+
+        data =
+            prepareData(rows);
+
+        hoveredIndex =
+            -1;
+
+        empty.style.display =
+            "none";
 
         status.textContent =
-            "Reading " + file.name + "...";
+            "WeatherData.csv loaded";
 
-        try {
+        chartInfo.textContent =
+            data[0].year +
+            "–" +
+            data[data.length - 1].year +
+            " • " +
+            data.length +
+            " years";
 
-            const text =
-                await file.text();
+        drawChart();
 
-            const rows =
-                parseCSV(text);
+    } catch (error) {
 
-            data =
-                prepareData(rows);
+        data = [];
 
-            hoveredIndex =
-                -1;
+        chartPoints = [];
 
-            empty.style.display =
-                "none";
+        empty.style.display =
+            "flex";
 
-            status.textContent =
-                file.name +
-                " loaded";
+        status.textContent =
+            "Could not load WeatherData.csv";
 
-            chartInfo.textContent =
-                data[0].year +
-                "–" +
-                data[data.length - 1].year +
-                " • " +
-                data.length +
-                " years";
+        chartInfo.textContent =
+            "No data loaded";
 
-            drawChart();
+        empty.textContent =
+            error.message;
 
-        } catch (error) {
-
-            data = [];
-
-            chartPoints = [];
-
-            empty.style.display =
-                "flex";
-
-            status.textContent =
-                "Could not load CSV";
-
-            chartInfo.textContent =
-                "No data loaded";
-
-            empty.textContent =
-                error.message;
-
-            drawChart();
-
-        }
+        drawChart();
 
     }
-);
+
+}
 
 
 /*
@@ -1695,6 +1773,8 @@ window.addEventListener(
 */
 
 resizeCanvas();
+
+loadWeatherData();
 
 </script>
 

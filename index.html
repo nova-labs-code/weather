@@ -1,0 +1,1702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Weather History</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100%;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #101114;
+            color: #ffffff;
+        }
+
+        body {
+            padding: 20px;
+        }
+
+        .page {
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            margin: 0 0 8px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            margin: 0;
+            color: #9da1aa;
+            font-size: 15px;
+        }
+
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .upload {
+            position: relative;
+            overflow: hidden;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 44px;
+            padding: 0 18px;
+            border: 1px solid #30343c;
+            border-radius: 8px;
+            background: #191b20;
+            color: #ffffff;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .upload:hover {
+            background: #20232a;
+        }
+
+        .upload input {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .status {
+            color: #9da1aa;
+            font-size: 14px;
+        }
+
+        .chart-card {
+            width: 100%;
+            background: #15171b;
+            border: 1px solid #292c33;
+            border-radius: 12px;
+            padding: 18px;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 18px;
+        }
+
+        .chart-title {
+            font-size: 19px;
+            font-weight: 600;
+        }
+
+        .chart-info {
+            color: #8e939d;
+            font-size: 13px;
+            margin-top: 5px;
+        }
+
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 14px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #d7dae0;
+            font-size: 13px;
+        }
+
+        .legend-line {
+            width: 24px;
+            height: 3px;
+            border-radius: 3px;
+        }
+
+        .legend-high {
+            background: #ff5252;
+        }
+
+        .legend-average {
+            background: #4da3ff;
+        }
+
+        .legend-low {
+            background: #58d68d;
+        }
+
+        .chart-wrap {
+            position: relative;
+            width: 100%;
+            height: 560px;
+            overflow: hidden;
+            border-radius: 8px;
+            background: #111317;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        .tooltip {
+            position: absolute;
+            display: none;
+            pointer-events: none;
+            min-width: 170px;
+            padding: 12px;
+            border: 1px solid #3a3e47;
+            border-radius: 8px;
+            background: rgba(20, 22, 27, 0.96);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+            font-size: 13px;
+            z-index: 10;
+        }
+
+        .tooltip-year {
+            margin-bottom: 8px;
+            font-weight: bold;
+            font-size: 15px;
+        }
+
+        .tooltip-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 18px;
+            margin-top: 5px;
+        }
+
+        .tooltip-label {
+            color: #9da1aa;
+        }
+
+        .tooltip-value {
+            font-weight: 600;
+        }
+
+        .bottom-info {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 14px;
+            color: #777c86;
+            font-size: 12px;
+        }
+
+        .empty {
+            min-height: 560px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: #777c86;
+            padding: 30px;
+        }
+
+        @media (max-width: 700px) {
+            body {
+                padding: 10px;
+            }
+
+            h1 {
+                font-size: 23px;
+            }
+
+            .chart-card {
+                padding: 12px;
+            }
+
+            .chart-wrap {
+                height: 430px;
+            }
+
+            .legend {
+                width: 100%;
+                gap: 10px;
+            }
+
+            .bottom-info {
+                font-size: 11px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="page">
+
+    <header>
+        <h1>Weather History</h1>
+        <p class="subtitle">
+            Yearly temperature history
+        </p>
+    </header>
+
+    <div class="toolbar">
+
+        <label class="upload">
+            Load CSV
+            <input
+                id="fileInput"
+                type="file"
+                accept=".csv,text/csv"
+            >
+        </label>
+
+        <span
+            id="status"
+            class="status"
+        >
+            Load your WeatherData.csv file
+        </span>
+
+    </div>
+
+    <div class="chart-card">
+
+        <div class="chart-header">
+
+            <div>
+                <div class="chart-title">
+                    Average Temperature by Year
+                </div>
+
+                <div
+                    id="chartInfo"
+                    class="chart-info"
+                >
+                    No data loaded
+                </div>
+            </div>
+
+            <div class="legend">
+
+                <div class="legend-item">
+                    <span class="legend-line legend-high"></span>
+                    <span>Average High</span>
+                </div>
+
+                <div class="legend-item">
+                    <span class="legend-line legend-average"></span>
+                    <span>Average Temperature</span>
+                </div>
+
+                <div class="legend-item">
+                    <span class="legend-line legend-low"></span>
+                    <span>Average Low</span>
+                </div>
+
+            </div>
+
+        </div>
+
+        <div
+            id="chartWrap"
+            class="chart-wrap"
+        >
+
+            <canvas id="chart"></canvas>
+
+            <div
+                id="tooltip"
+                class="tooltip"
+            ></div>
+
+            <div
+                id="empty"
+                class="empty"
+            >
+                Load a yearly weather CSV to display the chart.
+            </div>
+
+        </div>
+
+        <div class="bottom-info">
+
+            <span>
+                Temperature °F
+            </span>
+
+            <span>
+                Years are shown along the bottom
+            </span>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+const fileInput =
+    document.getElementById("fileInput");
+
+const status =
+    document.getElementById("status");
+
+const chartInfo =
+    document.getElementById("chartInfo");
+
+const chartWrap =
+    document.getElementById("chartWrap");
+
+const canvas =
+    document.getElementById("chart");
+
+const ctx =
+    canvas.getContext("2d");
+
+const tooltip =
+    document.getElementById("tooltip");
+
+const empty =
+    document.getElementById("empty");
+
+
+let data = [];
+
+let chartPoints = [];
+
+let hoveredIndex = -1;
+
+
+/*
+    --------------------------------------------------
+    CSV PARSER
+    --------------------------------------------------
+*/
+
+function parseCSV(text) {
+
+    const rows = [];
+
+    let row = [];
+    let cell = "";
+    let insideQuotes = false;
+
+    for (let i = 0; i < text.length; i++) {
+
+        const character = text[i];
+        const next = text[i + 1];
+
+        if (character === '"') {
+
+            if (insideQuotes && next === '"') {
+
+                cell += '"';
+                i++;
+
+            } else {
+
+                insideQuotes = !insideQuotes;
+
+            }
+
+        } else if (
+            character === "," &&
+            !insideQuotes
+        ) {
+
+            row.push(cell);
+            cell = "";
+
+        } else if (
+            (character === "\n" ||
+             character === "\r") &&
+            !insideQuotes
+        ) {
+
+            if (
+                character === "\r" &&
+                next === "\n"
+            ) {
+                i++;
+            }
+
+            row.push(cell);
+            cell = "";
+
+            if (
+                row.some(
+                    value => value.trim() !== ""
+                )
+            ) {
+                rows.push(row);
+            }
+
+            row = [];
+
+        } else {
+
+            cell += character;
+
+        }
+
+    }
+
+    if (cell !== "" || row.length > 0) {
+
+        row.push(cell);
+
+        if (
+            row.some(
+                value => value.trim() !== ""
+            )
+        ) {
+            rows.push(row);
+        }
+
+    }
+
+    if (rows.length < 2) {
+        return [];
+    }
+
+    const headers =
+        rows[0].map(
+            header =>
+                header
+                    .trim()
+                    .toLowerCase()
+                    .replace(/[\s-]+/g, "_")
+        );
+
+    return rows
+        .slice(1)
+        .map(row => {
+
+            const object = {};
+
+            headers.forEach(
+                (header, index) => {
+
+                    object[header] =
+                        (row[index] || "").trim();
+
+                }
+            );
+
+            return object;
+
+        });
+
+}
+
+
+/*
+    --------------------------------------------------
+    NUMBER HELPER
+    --------------------------------------------------
+*/
+
+function number(value) {
+
+    const result =
+        Number(
+            String(value)
+                .replace(/[^\d.+-]/g, "")
+        );
+
+    return Number.isFinite(result)
+        ? result
+        : null;
+
+}
+
+
+/*
+    --------------------------------------------------
+    FIND COLUMN
+    --------------------------------------------------
+*/
+
+function findColumn(object, names) {
+
+    const keys =
+        Object.keys(object);
+
+    for (const name of names) {
+
+        const found =
+            keys.find(
+                key =>
+                    key.toLowerCase() ===
+                    name.toLowerCase()
+            );
+
+        if (found) {
+            return found;
+        }
+
+    }
+
+    return null;
+
+}
+
+
+/*
+    --------------------------------------------------
+    PREPARE DATA
+    --------------------------------------------------
+*/
+
+function prepareData(rows) {
+
+    if (!rows.length) {
+        throw new Error(
+            "The CSV does not contain any data."
+        );
+    }
+
+    const sample =
+        rows[0];
+
+    const yearColumn =
+        findColumn(
+            sample,
+            [
+                "year",
+                "date"
+            ]
+        );
+
+    const highColumn =
+        findColumn(
+            sample,
+            [
+                "average_high",
+                "avg_high",
+                "high"
+            ]
+        );
+
+    const averageColumn =
+        findColumn(
+            sample,
+            [
+                "average_temperature",
+                "avg_temperature",
+                "average",
+                "avg",
+                "temperature"
+            ]
+        );
+
+    const lowColumn =
+        findColumn(
+            sample,
+            [
+                "average_low",
+                "avg_low",
+                "low"
+            ]
+        );
+
+    if (!yearColumn) {
+
+        throw new Error(
+            "Could not find the year column."
+        );
+
+    }
+
+    if (
+        !highColumn &&
+        !averageColumn &&
+        !lowColumn
+    ) {
+
+        throw new Error(
+            "Could not find temperature columns."
+        );
+
+    }
+
+    const result =
+        rows
+            .map(row => {
+
+                let year =
+                    String(
+                        row[yearColumn] || ""
+                    ).trim();
+
+                /*
+                    If the column contains a full
+                    date instead of just a year,
+                    extract the first four digits.
+                */
+
+                const yearMatch =
+                    year.match(/\d{4}/);
+
+                if (yearMatch) {
+                    year = yearMatch[0];
+                }
+
+                const yearNumber =
+                    Number(year);
+
+                if (
+                    !Number.isFinite(yearNumber)
+                ) {
+                    return null;
+                }
+
+                return {
+
+                    year: yearNumber,
+
+                    high:
+                        highColumn
+                            ? number(
+                                row[highColumn]
+                            )
+                            : null,
+
+                    average:
+                        averageColumn
+                            ? number(
+                                row[averageColumn]
+                            )
+                            : null,
+
+                    low:
+                        lowColumn
+                            ? number(
+                                row[lowColumn]
+                            )
+                            : null
+
+                };
+
+            })
+            .filter(Boolean)
+            .sort(
+                (a, b) =>
+                    a.year - b.year
+            );
+
+    if (!result.length) {
+
+        throw new Error(
+            "No valid yearly records were found."
+        );
+
+    }
+
+    return result;
+
+}
+
+
+/*
+    --------------------------------------------------
+    CANVAS SIZE
+    --------------------------------------------------
+*/
+
+function resizeCanvas() {
+
+    const rect =
+        canvas.getBoundingClientRect();
+
+    const ratio =
+        window.devicePixelRatio || 1;
+
+    canvas.width =
+        Math.round(
+            rect.width * ratio
+        );
+
+    canvas.height =
+        Math.round(
+            rect.height * ratio
+        );
+
+    ctx.setTransform(
+        ratio,
+        0,
+        0,
+        ratio,
+        0,
+        0
+    );
+
+    drawChart();
+
+}
+
+
+/*
+    --------------------------------------------------
+    CHART DRAWING
+    --------------------------------------------------
+*/
+
+function drawChart() {
+
+    const width =
+        canvas.clientWidth;
+
+    const height =
+        canvas.clientHeight;
+
+    ctx.clearRect(
+        0,
+        0,
+        width,
+        height
+    );
+
+    chartPoints = [];
+
+    if (!data.length) {
+        return;
+    }
+
+    const padding = {
+
+        left: 58,
+
+        right: 20,
+
+        top: 25,
+
+        bottom: 52
+
+    };
+
+    const chartWidth =
+        width -
+        padding.left -
+        padding.right;
+
+    const chartHeight =
+        height -
+        padding.top -
+        padding.bottom;
+
+
+    /*
+        Find all available temperature values.
+    */
+
+    const values = [];
+
+    data.forEach(item => {
+
+        if (item.high !== null) {
+            values.push(item.high);
+        }
+
+        if (item.average !== null) {
+            values.push(item.average);
+        }
+
+        if (item.low !== null) {
+            values.push(item.low);
+        }
+
+    });
+
+
+    if (!values.length) {
+        return;
+    }
+
+
+    let minimum =
+        Math.min(...values);
+
+    let maximum =
+        Math.max(...values);
+
+
+    /*
+        Give the chart some breathing room.
+    */
+
+    const range =
+        maximum - minimum || 10;
+
+    minimum -= range * 0.08;
+    maximum += range * 0.08;
+
+
+    /*
+        Round the bounds to sensible
+        Fahrenheit values.
+    */
+
+    minimum =
+        Math.floor(minimum / 5) * 5;
+
+    maximum =
+        Math.ceil(maximum / 5) * 5;
+
+
+    /*
+        Background.
+    */
+
+    ctx.fillStyle = "#111317";
+
+    ctx.fillRect(
+        0,
+        0,
+        width,
+        height
+    );
+
+
+    /*
+        Horizontal grid lines.
+    */
+
+    const gridStep = 5;
+
+    ctx.font = "12px Arial";
+    ctx.textAlign = "right";
+    ctx.textBaseline = "middle";
+
+    for (
+        let temperature = minimum;
+        temperature <= maximum;
+        temperature += gridStep
+    ) {
+
+        const y =
+            padding.top +
+            chartHeight -
+            (
+                (temperature - minimum) /
+                (maximum - minimum)
+            ) *
+            chartHeight;
+
+        ctx.strokeStyle =
+            "#25282e";
+
+        ctx.lineWidth = 1;
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            padding.left,
+            y
+        );
+
+        ctx.lineTo(
+            width - padding.right,
+            y
+        );
+
+        ctx.stroke();
+
+
+        ctx.fillStyle =
+            "#737882";
+
+        ctx.fillText(
+            temperature + "°",
+            padding.left - 10,
+            y
+        );
+
+    }
+
+
+    /*
+        Vertical year positions.
+    */
+
+    const count =
+        data.length;
+
+    function getX(index) {
+
+        if (count === 1) {
+            return (
+                padding.left +
+                chartWidth / 2
+            );
+        }
+
+        return (
+            padding.left +
+            (
+                index /
+                (count - 1)
+            ) *
+            chartWidth
+        );
+
+    }
+
+
+    function getY(value) {
+
+        return (
+            padding.top +
+            chartHeight -
+            (
+                (value - minimum) /
+                (maximum - minimum)
+            ) *
+            chartHeight
+        );
+
+    }
+
+
+    /*
+        Bottom year labels.
+    */
+
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+    ctx.font = "12px Arial";
+
+    const maxLabels =
+        Math.max(
+            2,
+            Math.floor(width / 75)
+        );
+
+    const labelEvery =
+        Math.max(
+            1,
+            Math.ceil(
+                count / maxLabels
+            )
+        );
+
+
+    data.forEach(
+        (item, index) => {
+
+            if (
+                index % labelEvery !== 0 &&
+                index !== count - 1
+            ) {
+                return;
+            }
+
+            const x =
+                getX(index);
+
+            ctx.fillStyle =
+                "#737882";
+
+            ctx.fillText(
+                item.year,
+                x,
+                height - padding.bottom + 18
+            );
+
+        }
+    );
+
+
+    /*
+        Store positions for hover.
+    */
+
+    data.forEach(
+        (item, index) => {
+
+            chartPoints.push({
+
+                x: getX(index),
+
+                year: item.year,
+
+                high: item.high,
+                average: item.average,
+                low: item.low
+
+            });
+
+        }
+    );
+
+
+    /*
+        Draw each temperature line.
+    */
+
+    drawLine(
+        "high",
+        "#ff5252",
+        getX,
+        getY
+    );
+
+    drawLine(
+        "average",
+        "#4da3ff",
+        getX,
+        getY
+    );
+
+    drawLine(
+        "low",
+        "#58d68d",
+        getX,
+        getY
+    );
+
+
+    /*
+        Draw hover indicator.
+    */
+
+    if (
+        hoveredIndex >= 0 &&
+        hoveredIndex < chartPoints.length
+    ) {
+
+        const point =
+            chartPoints[hoveredIndex];
+
+        ctx.strokeStyle =
+            "#555a64";
+
+        ctx.lineWidth = 1;
+
+        ctx.setLineDash([4, 4]);
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            point.x,
+            padding.top
+        );
+
+        ctx.lineTo(
+            point.x,
+            height - padding.bottom
+        );
+
+        ctx.stroke();
+
+        ctx.setLineDash([]);
+
+
+        drawHoverPoint(
+            point.x,
+            point.high,
+            "#ff5252",
+            getY
+        );
+
+        drawHoverPoint(
+            point.x,
+            point.average,
+            "#4da3ff",
+            getY
+        );
+
+        drawHoverPoint(
+            point.x,
+            point.low,
+            "#58d68d",
+            getY
+        );
+
+    }
+
+}
+
+
+/*
+    --------------------------------------------------
+    DRAW LINE
+    --------------------------------------------------
+*/
+
+function drawLine(
+    property,
+    lineColor,
+    getX,
+    getY
+) {
+
+    let started = false;
+
+    ctx.beginPath();
+
+    data.forEach(
+        (item, index) => {
+
+            const value =
+                item[property];
+
+            if (
+                value === null ||
+                !Number.isFinite(value)
+            ) {
+
+                started = false;
+
+                return;
+
+            }
+
+            const x =
+                getX(index);
+
+            const y =
+                getY(value);
+
+            if (!started) {
+
+                ctx.moveTo(
+                    x,
+                    y
+                );
+
+                started = true;
+
+            } else {
+
+                ctx.lineTo(
+                    x,
+                    y
+                );
+
+            }
+
+        }
+    );
+
+    ctx.strokeStyle =
+        lineColor;
+
+    ctx.lineWidth = 2;
+
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
+
+    ctx.stroke();
+
+}
+
+
+/*
+    --------------------------------------------------
+    HOVER POINT
+    --------------------------------------------------
+*/
+
+function drawHoverPoint(
+    x,
+    value,
+    lineColor,
+    getY
+) {
+
+    if (
+        value === null ||
+        !Number.isFinite(value)
+    ) {
+        return;
+    }
+
+    const y =
+        getY(value);
+
+    ctx.beginPath();
+
+    ctx.arc(
+        x,
+        y,
+        5,
+        0,
+        Math.PI * 2
+    );
+
+    ctx.fillStyle =
+        "#111317";
+
+    ctx.fill();
+
+    ctx.beginPath();
+
+    ctx.arc(
+        x,
+        y,
+        3,
+        0,
+        Math.PI * 2
+    );
+
+    ctx.fillStyle =
+        lineColor;
+
+    ctx.fill();
+
+}
+
+
+/*
+    --------------------------------------------------
+    FIND CLOSEST YEAR
+    --------------------------------------------------
+*/
+
+function findClosestPoint(mouseX) {
+
+    if (!chartPoints.length) {
+        return -1;
+    }
+
+    let closest = -1;
+    let distance = Infinity;
+
+    chartPoints.forEach(
+        (point, index) => {
+
+            const currentDistance =
+                Math.abs(
+                    point.x - mouseX
+                );
+
+            if (
+                currentDistance < distance
+            ) {
+
+                distance =
+                    currentDistance;
+
+                closest =
+                    index;
+
+            }
+
+        }
+    );
+
+    return closest;
+
+}
+
+
+/*
+    --------------------------------------------------
+    SHOW TOOLTIP
+    --------------------------------------------------
+*/
+
+function showTooltip(
+    point,
+    mouseX,
+    mouseY
+) {
+
+    tooltip.style.display =
+        "block";
+
+    tooltip.innerHTML = `
+
+        <div class="tooltip-year">
+            ${point.year}
+        </div>
+
+        <div class="tooltip-row">
+            <span class="tooltip-label">
+                Average High
+            </span>
+
+            <span class="tooltip-value">
+                ${formatValue(point.high)}
+            </span>
+        </div>
+
+        <div class="tooltip-row">
+            <span class="tooltip-label">
+                Average Temperature
+            </span>
+
+            <span class="tooltip-value">
+                ${formatValue(point.average)}
+            </span>
+        </div>
+
+        <div class="tooltip-row">
+            <span class="tooltip-label">
+                Average Low
+            </span>
+
+            <span class="tooltip-value">
+                ${formatValue(point.low)}
+            </span>
+        </div>
+
+    `;
+
+
+    /*
+        Keep tooltip inside the chart.
+    */
+
+    const tooltipWidth =
+        tooltip.offsetWidth;
+
+    const tooltipHeight =
+        tooltip.offsetHeight;
+
+    let left =
+        mouseX + 14;
+
+    let top =
+        mouseY + 14;
+
+
+    if (
+        left + tooltipWidth >
+        chartWrap.clientWidth - 5
+    ) {
+
+        left =
+            mouseX -
+            tooltipWidth -
+            14;
+
+    }
+
+
+    if (
+        top + tooltipHeight >
+        chartWrap.clientHeight - 5
+    ) {
+
+        top =
+            mouseY -
+            tooltipHeight -
+            14;
+
+    }
+
+
+    tooltip.style.left =
+        Math.max(
+            5,
+            left
+        ) + "px";
+
+    tooltip.style.top =
+        Math.max(
+            5,
+            top
+        ) + "px";
+
+}
+
+
+/*
+    --------------------------------------------------
+    FORMAT VALUE
+    --------------------------------------------------
+*/
+
+function formatValue(value) {
+
+    if (
+        value === null ||
+        !Number.isFinite(value)
+    ) {
+        return "—";
+    }
+
+    return (
+        Number(value)
+            .toFixed(2)
+            .replace(/\.00$/, "")
+    ) + "°F";
+
+}
+
+
+/*
+    --------------------------------------------------
+    MOUSE MOVE
+    --------------------------------------------------
+*/
+
+chartWrap.addEventListener(
+    "mousemove",
+    event => {
+
+        if (!data.length) {
+            return;
+        }
+
+        const rect =
+            canvas.getBoundingClientRect();
+
+        const mouseX =
+            event.clientX -
+            rect.left;
+
+        const mouseY =
+            event.clientY -
+            rect.top;
+
+        const index =
+            findClosestPoint(mouseX);
+
+        if (index === -1) {
+            return;
+        }
+
+        hoveredIndex =
+            index;
+
+        drawChart();
+
+        showTooltip(
+            chartPoints[index],
+            mouseX,
+            mouseY
+        );
+
+    }
+);
+
+
+/*
+    --------------------------------------------------
+    TOUCH SUPPORT
+    --------------------------------------------------
+*/
+
+chartWrap.addEventListener(
+    "touchmove",
+    event => {
+
+        if (!data.length) {
+            return;
+        }
+
+        const touch =
+            event.touches[0];
+
+        if (!touch) {
+            return;
+        }
+
+        const rect =
+            canvas.getBoundingClientRect();
+
+        const mouseX =
+            touch.clientX -
+            rect.left;
+
+        const mouseY =
+            touch.clientY -
+            rect.top;
+
+        const index =
+            findClosestPoint(mouseX);
+
+        if (index === -1) {
+            return;
+        }
+
+        hoveredIndex =
+            index;
+
+        drawChart();
+
+        showTooltip(
+            chartPoints[index],
+            mouseX,
+            mouseY
+        );
+
+        event.preventDefault();
+
+    },
+    {
+        passive: false
+    }
+);
+
+
+/*
+    --------------------------------------------------
+    MOUSE LEAVE
+    --------------------------------------------------
+*/
+
+chartWrap.addEventListener(
+    "mouseleave",
+    () => {
+
+        hoveredIndex =
+            -1;
+
+        tooltip.style.display =
+            "none";
+
+        drawChart();
+
+    }
+);
+
+
+/*
+    --------------------------------------------------
+    TOUCH END
+    --------------------------------------------------
+*/
+
+chartWrap.addEventListener(
+    "touchend",
+    () => {
+
+        hoveredIndex =
+            -1;
+
+        tooltip.style.display =
+            "none";
+
+        drawChart();
+
+    }
+);
+
+
+/*
+    --------------------------------------------------
+    LOAD FILE
+    --------------------------------------------------
+*/
+
+fileInput.addEventListener(
+    "change",
+    async event => {
+
+        const file =
+            event.target.files[0];
+
+        if (!file) {
+            return;
+        }
+
+        status.textContent =
+            "Reading " + file.name + "...";
+
+        try {
+
+            const text =
+                await file.text();
+
+            const rows =
+                parseCSV(text);
+
+            data =
+                prepareData(rows);
+
+            hoveredIndex =
+                -1;
+
+            empty.style.display =
+                "none";
+
+            status.textContent =
+                file.name +
+                " loaded";
+
+            chartInfo.textContent =
+                data[0].year +
+                "–" +
+                data[data.length - 1].year +
+                " • " +
+                data.length +
+                " years";
+
+            drawChart();
+
+        } catch (error) {
+
+            data = [];
+
+            chartPoints = [];
+
+            empty.style.display =
+                "flex";
+
+            status.textContent =
+                "Could not load CSV";
+
+            chartInfo.textContent =
+                "No data loaded";
+
+            empty.textContent =
+                error.message;
+
+            drawChart();
+
+        }
+
+    }
+);
+
+
+/*
+    --------------------------------------------------
+    RESIZE
+    --------------------------------------------------
+*/
+
+window.addEventListener(
+    "resize",
+    resizeCanvas
+);
+
+
+/*
+    --------------------------------------------------
+    INITIALIZE
+    --------------------------------------------------
+*/
+
+resizeCanvas();
+
+</script>
+
+</body>
+</html>
